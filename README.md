@@ -37,3 +37,4 @@ Rota → DTO (zod) → Serviço → Repositório → Prisma → Neon
 
 ## Testes
 `npm test`
+daily task
