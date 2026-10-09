@@ -1,4 +1,4 @@
-# Daily Task API
+# Daily Task API PI2
 
 API do Daily Task (Projeto Integrador · UESPI/UAPI). Node.js 22 · Express 5 · Prisma · Neon (PostgreSQL) · JWT · Swagger.
 
