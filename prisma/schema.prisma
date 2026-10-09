@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Prioridade {
+  baixa
+  media
+  alta
+}
+
+model Usuario {
+  id               Int       @id @default(autoincrement())
+  nome             String    @db.VarChar(100)
+  email            String    @unique @db.VarChar(150)
+  senhaHash        String    @map("senha_hash") @db.VarChar(255)
+  tentativasFalhas Int       @default(0) @map("tentativas_falhas")
+  bloqueadoAte     DateTime? @map("bloqueado_ate")
+  criadoEm         DateTime  @default(now()) @map("dt_cadastro")
+  sessoes          Sessao[]
+  categorias       Categoria[]
+  tarefas          Tarefa[]
+  historico        Historico[]
+
+  @@map("usuario")
+}
+
+model Sessao {
+  id          String    @id @default(uuid())
+  usuarioId   Int       @map("usuario_id")
+  refreshHash String    @unique @map("refresh_hash")
+  expiraEm    DateTime  @map("expira_em")
+  revogadaEm  DateTime? @map("revogada_em")
+  criadoEm    DateTime  @default(now()) @map("criado_em")
+  usuario     Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId])
+  @@map("sessao")
+}
+
+model Categoria {
+  id        Int      @id @default(autoincrement())
+  usuarioId Int      @map("usuario_id")
+  nome      String   @db.VarChar(80)
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tarefas   Tarefa[]
+
+  @@unique([usuarioId, nome])
+  @@map("categoria")
+}
+
+model Tarefa {
+  id          Int        @id @default(autoincrement())
+  usuarioId   Int        @map("usuario_id")
+  categoriaId Int?       @map("categoria_id")
+  titulo      String     @db.VarChar(150)
+  descricao   String?
+  data        DateTime   @db.Date
+  hora        DateTime?  @db.Time
+  prioridade  Prioridade @default(media)
+  concluida   Boolean    @default(false)
+  criadoEm    DateTime   @default(now()) @map("dt_cadastro")
+  usuario     Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categoria   Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+  lembretes   Lembrete[]
+  historico   Historico[]
+
+  @@index([usuarioId, data])
+  @@map("tarefa")
+}
+
+model Lembrete {
+  id         Int      @id @default(autoincrement())
+  tarefaId   Int      @map("tarefa_id")
+  dispararEm DateTime @map("dt_hr_lembrete")
+  ativo      Boolean  @default(true)
+  enviado    Boolean  @default(false)
+  tarefa     Tarefa   @relation(fields: [tarefaId], references: [id], onDelete: Cascade)
+
+  @@index([ativo, enviado, dispararEm])
+  @@map("lembrete")
+}
+
+model Historico {
+  id          Int      @id @default(autoincrement())
+  tarefaId    Int      @map("tarefa_id")
+  usuarioId   Int      @map("usuario_id")
+  concluidaEm DateTime @default(now()) @map("dt_hr_conclusao")
+  tarefa      Tarefa   @relation(fields: [tarefaId], references: [id], onDelete: Cascade)
+  usuario     Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("historico")
+}
